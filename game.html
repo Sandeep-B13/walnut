@@ -66,20 +66,25 @@
     }
 
     .popup {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #f9f9f9;
-      color: #000;
-      border-radius: 10px;
-      text-align: center;
-      padding: 20px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-      display: none;
-      z-index: 9999;
-    }
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #f9f9f9;
+  color: #000;
+  border-radius: 10px;
+  text-align: center;
+  padding: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  display: none;
+  z-index: 9999;
+}
 
+.moving-walnut {
+  width: 60px;
+  margin-top: 15px;
+  animation: move-horizontal 2s infinite alternate ease-in-out;
+}
     .popup button {
       background-color: #000;
       color: white;
@@ -107,6 +112,15 @@
       opacity: 0.8;
       animation: fall 3s linear infinite;
     }
+    
+    @keyframes move-horizontal {
+  0% {
+    transform: translateX(-10px);
+  }
+  100% {
+    transform: translateX(10px);
+  }
+}
 
     @keyframes fall {
       0% {
@@ -137,10 +151,11 @@
   </div>
   <div id="grid-container"></div>
 
-  <div class="popup" id="popup">
-    <div id="popup-content" style="font-weight: bold;"></div>
-    <button id="play-again-button">Play Again</button>
-  </div>
+<div class="popup" id="popup">
+  <div id="popup-content" style="font-weight: bold;"></div>
+  <button id="play-again-button">Play Again</button>
+  <img src="Mask-group-5.webp" alt="Walnut" class="moving-walnut">
+</div>
 
   <div class="confetti-container" id="confetti-container"></div>
 
