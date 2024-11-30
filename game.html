@@ -42,6 +42,7 @@
       background-color: white;
       border: 1px solid #a270e0; /* Border for individual cells */
       position: relative;
+      transition: background-color 0.2s ease-in-out;
     }
 
     .grid-cell img {
@@ -91,19 +92,34 @@
       cursor: pointer;
     }
 
-    /* Mobile responsiveness */
-    @media (max-width: 600px) {
-      .grid-cell {
-        width: 30px;
-        height: 30px;
-      }
+    /* Confetti container */
+    .confetti-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+    }
 
-      .logo img {
-        width: 100px;
-      }
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: white;
+      opacity: 0.8;
+      animation: fall 3s linear infinite;
+    }
 
-      .controls select, .controls button {
-        font-size: 0.9rem;
+    @keyframes fall {
+      0% {
+        transform: translateY(-100%) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
       }
     }
   </style>
@@ -132,6 +148,9 @@
     <button id="play-again-button">Play Again</button>
   </div>
 
+  <!-- Confetti -->
+  <div class="confetti-container" id="confetti-container"></div>
+
   <script>
     const gridContainer = document.getElementById('grid-container');
     const startButton = document.getElementById('start-button');
@@ -140,6 +159,7 @@
     const counterDisplay = document.getElementById('counter');
     const popup = document.getElementById('popup');
     const playAgainButton = document.getElementById('play-again-button');
+    const confettiContainer = document.getElementById('confetti-container');
 
     let isActive = false;
     let hoverCount = 0;
@@ -153,23 +173,22 @@
       for (let i = 0; i < size * size; i++) {
         const cell = document.createElement('div');
         cell.classList.add('grid-cell');
-        cell.addEventListener('mouseover', handleHover);
+
+        cell.addEventListener('mouseenter', () => {
+          if (isActive) {
+            cell.style.backgroundColor = 'yellow';
+            hoverCount++;
+            counterDisplay.textContent = `Hover Count: ${hoverCount}`;
+          }
+        });
+
+        cell.addEventListener('mouseleave', () => {
+          if (isActive) {
+            cell.style.backgroundColor = 'white';
+          }
+        });
+
         gridContainer.appendChild(cell);
-      }
-    }
-
-    function handleHover(e) {
-      if (!isActive) return;
-
-      const cell = e.target;
-
-      if (!cell.classList.contains('yellow')) {
-        hoverCount++;
-        counterDisplay.textContent = `Hover Count: ${hoverCount}`;
-
-        if (gridContainer.children[walnutImagePosition] === cell) {
-          showPopup();
-        }
       }
     }
 
@@ -188,6 +207,12 @@
       const img = document.createElement('img');
       img.src = 'Mask-group-5.webp';
       walnutCell.appendChild(img);
+
+      walnutCell.addEventListener('mouseenter', () => {
+        if (isActive) {
+          showPopup();
+        }
+      });
     }
 
     function stopGame() {
@@ -199,6 +224,20 @@
     function showPopup() {
       isActive = false;
       popup.style.display = 'block';
+      generateConfetti();
+    }
+
+    function generateConfetti() {
+      confettiContainer.innerHTML = '';
+      for (let i = 0; i < 100; i++) {
+        const confetti = document.createElement('div');
+        confetti.classList.add('confetti');
+        confetti.style.left = `${Math.random() * 100}vw`;
+        confetti.style.animationDelay = `${Math.random()}s`;
+        confetti.style.animationDuration = `${1 + Math.random() * 2}s`;
+        confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+        confettiContainer.appendChild(confetti);
+      }
     }
 
     playAgainButton.addEventListener('click', () => {
