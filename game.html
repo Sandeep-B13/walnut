@@ -41,10 +41,8 @@
       height: 50px;
       background-color: white;
       border: 1px solid #000;
+      transition: background-color 0.2s ease-in-out;
       position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
 
     .grid-cell img {
@@ -53,35 +51,13 @@
       object-fit: contain;
       display: none;
       position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
     }
 
     .grid-cell img.visible {
       display: block;
-    }
-
-    .glitter {
-      position: absolute;
-      width: 5px;
-      height: 5px;
-      background-color: #fff;
-      border-radius: 50%;
-      animation: shimmer 2s infinite ease-in-out;
-      pointer-events: none;
-    }
-
-    @keyframes shimmer {
-      0% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-      50% {
-        opacity: 0.5;
-        transform: translateY(-10px) scale(1.2);
-      }
-      100% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
     }
 
     #counter {
@@ -104,21 +80,6 @@
       z-index: 9999;
     }
 
-    .popup img {
-      width: 50px;
-      margin: 0 10px;
-      animation: jump 1s infinite;
-    }
-
-    @keyframes jump {
-      0%, 100% {
-        transform: translateY(0);
-      }
-      50% {
-        transform: translateY(-10px);
-      }
-    }
-
     .popup button {
       background-color: #000;
       color: white;
@@ -128,20 +89,34 @@
       cursor: pointer;
     }
 
-    @keyframes color-switch {
-      0% {
-        background-color: white;
-      }
-      50% {
-        background-color: #a270e0;
-      }
-      100% {
-        background-color: white;
-      }
+    .confetti-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: hidden;
     }
 
-    .switch-color {
-      animation: color-switch 1s infinite;
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: white;
+      opacity: 0.8;
+      animation: fall 3s linear infinite;
+    }
+
+    @keyframes fall {
+      0% {
+        transform: translateY(-100%) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+      }
     }
   </style>
 </head>
@@ -163,49 +138,91 @@
   <div id="grid-container"></div>
 
   <div class="popup" id="popup">
-    <img src="Mask-group-5.webp" alt="Walnut">
     <div id="popup-content" style="font-weight: bold;"></div>
-    <img src="Mask-group-5.webp" alt="Walnut">
     <button id="play-again-button">Play Again</button>
   </div>
+
+  <div class="confetti-container" id="confetti-container"></div>
 
   <script>
     const gridContainer = document.getElementById('grid-container');
     const startButton = document.getElementById('start-button');
-    const playAgainButton = document.getElementById('play-again-button');
+    const stopButton = document.getElementById('stop-button');
+    const gridSizeSelect = document.getElementById('grid-size');
+    const counterDisplay = document.getElementById('counter');
     const popup = document.getElementById('popup');
     const popupContent = document.getElementById('popup-content');
+    const playAgainButton = document.getElementById('play-again-button');
+    const confettiContainer = document.getElementById('confetti-container');
 
     let isActive = false;
+    let hoverCount = 0;
+    let yellowCount = 0;
+    let totalCells = 0;
     let walnutImagePosition = null;
+
+    // Set default highlight color (can be changed here using hex code)
+    let highlightColor = '#FFFF00'; // << Update this value to change the default color
+
+    // Parse URL parameter
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('color')) {
+      highlightColor = params.get('color'); // Override the default highlight color
+    }
+
+    function updateCounts() {
+      const whiteCount = totalCells - yellowCount;
+      counterDisplay.textContent = Hover Count: ${hoverCount} | Highlighted Cells: ${yellowCount} | White Cells: ${whiteCount};
+    }
 
     function createGrid(size) {
       gridContainer.innerHTML = '';
-      gridContainer.style.gridTemplateRows = `repeat(${size}, 1fr)`;
-      gridContainer.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+      gridContainer.style.gridTemplateRows = repeat(${size}, 1fr);
+      gridContainer.style.gridTemplateColumns = repeat(${size}, 1fr);
+      totalCells = size * size;
 
-      for (let i = 0; i < size * size; i++) {
+      for (let i = 0; i < totalCells; i++) {
         const cell = document.createElement('div');
         cell.classList.add('grid-cell');
+
+        cell.addEventListener('mouseenter', () => {
+          if (isActive) {
+            hoverCount++;
+            if (cell.style.backgroundColor === highlightColor) {
+              cell.style.backgroundColor = 'white';
+              yellowCount--;
+            } else {
+              cell.style.backgroundColor = highlightColor;
+              yellowCount++;
+            }
+            updateCounts();
+          }
+        });
 
         gridContainer.appendChild(cell);
       }
     }
 
     function startGame() {
-      isActive = true;
-      const gridSize = parseInt(document.getElementById('grid-size').value);
+      const gridSize = parseInt(gridSizeSelect.value);
       createGrid(gridSize);
+      isActive = true;
+      startButton.disabled = true;
+      stopButton.disabled = false;
 
-      walnutImagePosition = Math.floor(Math.random() * gridSize * gridSize);
+      hoverCount = 0;
+      yellowCount = 0;
+      updateCounts();
+
+      walnutImagePosition = Math.floor(Math.random() * totalCells);
       const walnutCell = gridContainer.children[walnutImagePosition];
       const img = document.createElement('img');
       img.src = 'Mask-group-5.webp';
-      img.classList.add('visible');
       walnutCell.appendChild(img);
 
       walnutCell.addEventListener('mouseenter', () => {
         if (isActive) {
+          img.classList.add('visible');
           showPopup();
         }
       });
@@ -213,23 +230,44 @@
 
     function showPopup() {
       isActive = false;
+      startButton.disabled = false;
+      stopButton.disabled = true;
+
+      const hoverPercentage = (hoverCount / totalCells) * 100;
+      let message = '';
+      if (hoverPercentage <= 50) {
+        message = 'Excellent! You found the walnut quickly!';
+      } else if (hoverPercentage <= 75) {
+        message = 'Good job! You found the walnut in time!';
+      } else {
+        message = 'Better luck next time! You found the walnut late.';
+      }
+
+      popupContent.textContent = message;
       popup.style.display = 'block';
-      applyEffects();
+      generateConfetti();
     }
 
-    function applyEffects() {
-      Array.from(gridContainer.children).forEach((cell, index) => {
-        if (index !== walnutImagePosition) {
-          cell.classList.add('switch-color');
-          cell.style.backgroundImage = 'url(https://dka575ofm4ao0.cloudfront.net/pages-transactional_logos/retina/228472/walnut-logo-black.png)';
-          cell.style.backgroundRepeat = 'no-repeat';
-          cell.style.backgroundPosition = 'center';
-        }
-      });
+    function generateConfetti() {
+      confettiContainer.innerHTML = '';
+      for (let i = 0; i < 100; i++) {
+        const confetti = document.createElement('div');
+        confetti.classList.add('confetti');
+        confetti.style.left = ${Math.random() * 100}vw;
+        confetti.style.animationDelay = ${Math.random()}s;
+        confetti.style.animationDuration = ${1 + Math.random() * 2}s;
+        confetti.style.backgroundColor = hsl(${Math.random() * 360}, 100%, 50%);
+        confettiContainer.appendChild(confetti);
+      }
     }
+
+    playAgainButton.addEventListener('click', () => {
+      location.reload();
+    });
 
     startButton.addEventListener('click', startGame);
-    playAgainButton.addEventListener('click', () => location.reload());
+    stopButton.addEventListener('click', () => (isActive = false));
+    document.addEventListener('DOMContentLoaded', () => createGrid(5));
   </script>
 </body>
 </html>
