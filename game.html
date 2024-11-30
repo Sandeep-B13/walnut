@@ -32,17 +32,18 @@
     #grid-container {
       display: grid;
       margin: 0 auto;
-      gap: 1px; /* Add gap between cells for borders */
+      gap: 0; /* No gap between grids */
       border: 5px solid #ffffff;
-      background-color: #a270e0; /* Match the body background */
     }
 
     .grid-cell {
       width: 50px;
       height: 50px;
       background-color: white;
-      border: 1px solid #cccccc; /* Add border between grids */
-      position: relative;
+    }
+
+    .grid-cell.yellow {
+      background-color: yellow;
     }
 
     .grid-cell img {
@@ -61,7 +62,7 @@
       font-weight: bold;
     }
 
-    /* Popup styling */
+    /* Center popup styling */
     .popup {
       position: fixed;
       top: 50%;
@@ -75,25 +76,6 @@
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
       display: none;
       z-index: 9999;
-    }
-
-    .popup img {
-      width: 50px;
-      margin: 10px 0;
-    }
-
-    .popup button {
-      margin-top: 10px;
-      padding: 10px 20px;
-      border: none;
-      background: #a270e0;
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    .popup button:hover {
-      background: #854dbf;
     }
 
     /* Confetti container */
@@ -167,11 +149,7 @@
   <div id="grid-container"></div>
 
   <!-- Popup -->
-  <div class="popup" id="popup">
-    <img src="./walnut-image.jpg" alt="Walnut">
-    <p>Congratulations, Walnut Found!</p>
-    <button id="play-again-button">Play Again</button>
-  </div>
+  <div class="popup" id="popup">Congratulations, Walnut Found!</div>
 
   <!-- Confetti -->
   <div class="confetti-container" id="confetti-container"></div>
@@ -183,7 +161,6 @@
     const gridSizeSelect = document.getElementById('grid-size');
     const counterDisplay = document.getElementById('counter');
     const popup = document.getElementById('popup');
-    const playAgainButton = document.getElementById('play-again-button');
     const confettiContainer = document.getElementById('confetti-container');
 
     let isActive = false;
@@ -216,9 +193,17 @@
 
         // Check if walnut image is found
         if (gridContainer.children[walnutImagePosition] === cell) {
-          showPopup(cell);
+          showPopup();
         }
       }
+    }
+
+    function resetHoverColor() {
+      const cells = document.querySelectorAll('.grid-cell.yellow');
+      cells.forEach(cell => {
+        cell.classList.remove('yellow');
+        cell.style.backgroundColor = 'white';
+      });
     }
 
     function startGame() {
@@ -237,23 +222,29 @@
       const img = document.createElement('img');
       img.src = './walnut-image.jpg'; // Add your image path
       img.classList.add('visible');
+      img.style.display = 'none'; // Ensure hidden initially
       walnutCell.appendChild(img);
+
+      walnutCell.addEventListener('mouseover', () => {
+        img.style.display = 'block'; // Reveal image on hover
+      });
     }
 
     function stopGame() {
       isActive = false;
       startButton.disabled = false;
       stopButton.disabled = true;
-      confettiContainer.innerHTML = ''; // Stop confetti
+
+      // Remove event listeners from cells
+      const cells = gridContainer.querySelectorAll('.grid-cell');
+      cells.forEach(cell => cell.replaceWith(cell.cloneNode(true)));
     }
 
-    function showPopup(cell) {
-      isActive = false;
-      const walnutImg = cell.querySelector('img');
-      walnutImg.style.display = 'block'; // Ensure walnut image is visible
-
-      generateConfetti(); // Start confetti blast
+    function showPopup() {
+      popup.textContent = `Congratulations, Walnut Found! Hover Count: ${hoverCount}`;
       popup.style.display = 'block';
+      generateConfetti();
+      setTimeout(() => popup.style.display = 'none', 3000); // Hide popup after 3 seconds
     }
 
     function generateConfetti() {
@@ -263,18 +254,11 @@
         confetti.classList.add('confetti');
         confetti.style.left = `${Math.random() * 100}vw`;
         confetti.style.animationDelay = `${Math.random()}s`;
-        confetti.style.animationDuration = `${1 + Math.random() * 2}s`;
+        confetti.style.animationDuration = `${1 + Math.random() * 2}s`; // Randomize fall speed
         confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
         confettiContainer.appendChild(confetti);
       }
     }
-
-    playAgainButton.addEventListener('click', () => {
-      popup.style.display = 'none';
-      confettiContainer.innerHTML = ''; // Stop confetti
-      stopButton.disabled = true;
-      startButton.disabled = false;
-    });
 
     startButton.addEventListener('click', startGame);
     stopButton.addEventListener('click', stopGame);
