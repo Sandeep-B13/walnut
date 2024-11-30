@@ -42,13 +42,18 @@
       background-color: white;
       border: 1px solid #000;
       transition: background-color 0.2s ease-in-out;
+      position: relative;
     }
 
     .grid-cell img {
-      width: 100%;
-      height: 100%;
+      width: 50%;
+      height: 50%;
       object-fit: contain;
       display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
     }
 
     .grid-cell img.visible {
@@ -73,12 +78,6 @@
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
       display: none;
       z-index: 9999;
-    }
-
-    .popup img {
-      width: 50px;
-      height: auto;
-      margin: 10px;
     }
 
     .popup button {
@@ -140,7 +139,6 @@
 
   <div class="popup" id="popup">
     <div id="popup-content" style="font-weight: bold;"></div>
-    <img src="Mask-group-5.webp" alt="Walnut Image">
     <button id="play-again-button">Play Again</button>
   </div>
 
@@ -163,8 +161,8 @@
     let totalCells = 0;
     let walnutImagePosition = null;
 
-    // Set default highlight color (can be changed here)
-    let highlightColor = 'yellow'; // << Update this value to change the default color
+    // Set default highlight color (can be changed here using hex code)
+    let highlightColor = '#FFFF00'; // << Update this value to change the default color
 
     // Parse URL parameter
     const params = new URLSearchParams(window.location.search);
@@ -224,7 +222,7 @@
 
       walnutCell.addEventListener('mouseenter', () => {
         if (isActive) {
-          img.style.display = 'block';
+          img.classList.add('visible');
           showPopup();
         }
       });
