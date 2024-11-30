@@ -31,19 +31,17 @@
 
     #grid-container {
       display: grid;
-      margin: 0 auto;
-      gap: 0; /* No gap between grids */
+      gap: 1px; /* Add a border gap between grid cells */
       border: 5px solid #ffffff;
+      background-color: #ffffff;
     }
 
     .grid-cell {
       width: 50px;
       height: 50px;
       background-color: white;
-    }
-
-    .grid-cell.yellow {
-      background-color: yellow;
+      border: 1px solid #a270e0; /* Border for individual cells */
+      position: relative;
     }
 
     .grid-cell img {
@@ -78,34 +76,19 @@
       z-index: 9999;
     }
 
-    /* Confetti container */
-    .confetti-container {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      pointer-events: none;
+    .popup img {
+      width: 50px;
+      height: auto;
+      margin: 10px;
     }
 
-    .confetti {
-      position: absolute;
-      width: 10px;
-      height: 10px;
-      background: white;
-      animation: fall 3s linear infinite;
-    }
-
-    @keyframes fall {
-      0% {
-        transform: translateY(-100%) rotate(0deg);
-        opacity: 1;
-      }
-      100% {
-        transform: translateY(100vh) rotate(360deg);
-        opacity: 0;
-      }
+    .popup button {
+      background-color: #a270e0;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
     }
 
     /* Mobile responsiveness */
@@ -113,11 +96,6 @@
       .grid-cell {
         width: 30px;
         height: 30px;
-      }
-
-      #grid-container {
-        width: 90vw;
-        max-width: 400px;
       }
 
       .logo img {
@@ -131,7 +109,6 @@
   </style>
 </head>
 <body>
-  <!-- Logo -->
   <div class="logo">
     <img src="https://dka575ofm4ao0.cloudfront.net/pages-transactional_logos/retina/228472/walnut-logo-black.png" alt="Walnut Logo">
   </div>
@@ -149,10 +126,11 @@
   <div id="grid-container"></div>
 
   <!-- Popup -->
-  <div class="popup" id="popup">Congratulations, Walnut Found!</div>
-
-  <!-- Confetti -->
-  <div class="confetti-container" id="confetti-container"></div>
+  <div class="popup" id="popup">
+    <div id="popup-content">Congratulations, Walnut Found!</div>
+    <img src="Mask-group-5.webp" alt="Walnut Image">
+    <button id="play-again-button">Play Again</button>
+  </div>
 
   <script>
     const gridContainer = document.getElementById('grid-container');
@@ -161,14 +139,14 @@
     const gridSizeSelect = document.getElementById('grid-size');
     const counterDisplay = document.getElementById('counter');
     const popup = document.getElementById('popup');
-    const confettiContainer = document.getElementById('confetti-container');
+    const playAgainButton = document.getElementById('play-again-button');
 
     let isActive = false;
     let hoverCount = 0;
     let walnutImagePosition = null;
 
     function createGrid(size) {
-      gridContainer.innerHTML = ''; // Clear existing grid
+      gridContainer.innerHTML = '';
       gridContainer.style.gridTemplateRows = `repeat(${size}, 1fr)`;
       gridContainer.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
 
@@ -186,24 +164,13 @@
       const cell = e.target;
 
       if (!cell.classList.contains('yellow')) {
-        cell.classList.add('yellow');
-        cell.style.backgroundColor = 'yellow';
         hoverCount++;
         counterDisplay.textContent = `Hover Count: ${hoverCount}`;
 
-        // Check if walnut image is found
         if (gridContainer.children[walnutImagePosition] === cell) {
           showPopup();
         }
       }
-    }
-
-    function resetHoverColor() {
-      const cells = document.querySelectorAll('.grid-cell.yellow');
-      cells.forEach(cell => {
-        cell.classList.remove('yellow');
-        cell.style.backgroundColor = 'white';
-      });
     }
 
     function startGame() {
@@ -213,61 +180,34 @@
       startButton.disabled = true;
       stopButton.disabled = false;
 
-      hoverCount = 0; // Reset hover count
+      hoverCount = 0;
       counterDisplay.textContent = `Hover Count: ${hoverCount}`;
 
-      // Randomly position Walnut image
       walnutImagePosition = Math.floor(Math.random() * gridSize * gridSize);
       const walnutCell = gridContainer.children[walnutImagePosition];
       const img = document.createElement('img');
-      img.src = './walnut-image.jpg'; // Add your image path
-      img.classList.add('visible');
-      img.style.display = 'none'; // Ensure hidden initially
+      img.src = 'Mask-group-5.webp';
       walnutCell.appendChild(img);
-
-      walnutCell.addEventListener('mouseover', () => {
-        img.style.display = 'block'; // Reveal image on hover
-      });
     }
 
     function stopGame() {
       isActive = false;
       startButton.disabled = false;
       stopButton.disabled = true;
-
-      // Remove event listeners from cells
-      const cells = gridContainer.querySelectorAll('.grid-cell');
-      cells.forEach(cell => cell.replaceWith(cell.cloneNode(true)));
     }
 
     function showPopup() {
-      popup.textContent = `Congratulations, Walnut Found! Hover Count: ${hoverCount}`;
+      isActive = false;
       popup.style.display = 'block';
-      generateConfetti();
-      setTimeout(() => popup.style.display = 'none', 3000); // Hide popup after 3 seconds
     }
 
-    function generateConfetti() {
-      confettiContainer.innerHTML = '';
-      for (let i = 0; i < 100; i++) {
-        const confetti = document.createElement('div');
-        confetti.classList.add('confetti');
-        confetti.style.left = `${Math.random() * 100}vw`;
-        confetti.style.animationDelay = `${Math.random()}s`;
-        confetti.style.animationDuration = `${1 + Math.random() * 2}s`; // Randomize fall speed
-        confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
-        confettiContainer.appendChild(confetti);
-      }
-    }
+    playAgainButton.addEventListener('click', () => {
+      location.reload();
+    });
 
     startButton.addEventListener('click', startGame);
     stopButton.addEventListener('click', stopGame);
-    gridSizeSelect.addEventListener('change', () => createGrid(parseInt(gridSizeSelect.value)));
-
-    // Initialize default grid
-    document.addEventListener('DOMContentLoaded', () => {
-      createGrid(5);
-    });
+    document.addEventListener('DOMContentLoaded', () => createGrid(5));
   </script>
 </body>
 </html>
