@@ -10,14 +10,15 @@
       background-color: #a270e0;
       margin: 0;
       display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
       flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      height: 100vh;
     }
 
     .logo {
-      margin-top: 20px;
+      margin: 20px;
+      position: relative;
     }
 
     .logo img {
@@ -40,9 +41,9 @@
       width: 50px;
       height: 50px;
       background-color: white;
-      border: 1px solid #a270e0; /* Border for individual cells */
-      position: relative;
+      border: 1px solid #a270e0;
       transition: background-color 0.2s ease-in-out;
+      position: relative;
     }
 
     .grid-cell img {
@@ -61,9 +62,8 @@
       font-weight: bold;
     }
 
-    /* Center popup styling */
     .popup {
-      position: fixed;
+      position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
@@ -92,7 +92,6 @@
       cursor: pointer;
     }
 
-    /* Confetti container */
     .confetti-container {
       position: fixed;
       top: 0;
@@ -137,18 +136,16 @@
     </select>
     <button id="start-button">START</button>
     <button id="stop-button" disabled>STOP</button>
-    <div id="counter">Hover Count: 0</div>
+    <div id="counter">Hover Count: 0 | Yellow Cells: 0 | White Cells: 0</div>
   </div>
   <div id="grid-container"></div>
 
-  <!-- Popup -->
   <div class="popup" id="popup">
-    <div id="popup-content">Congratulations, Walnut Found!</div>
+    <div id="popup-content"></div>
     <img src="Mask-group-5.webp" alt="Walnut Image">
     <button id="play-again-button">Play Again</button>
   </div>
 
-  <!-- Confetti -->
   <div class="confetti-container" id="confetti-container"></div>
 
   <script>
@@ -163,28 +160,36 @@
 
     let isActive = false;
     let hoverCount = 0;
+    let yellowCount = 0;
+    let totalCells = 0;
     let walnutImagePosition = null;
+
+    function updateCounts() {
+      const whiteCount = totalCells - yellowCount;
+      counterDisplay.textContent = `Hover Count: ${hoverCount} | Yellow Cells: ${yellowCount} | White Cells: ${whiteCount}`;
+    }
 
     function createGrid(size) {
       gridContainer.innerHTML = '';
       gridContainer.style.gridTemplateRows = `repeat(${size}, 1fr)`;
       gridContainer.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+      totalCells = size * size;
 
-      for (let i = 0; i < size * size; i++) {
+      for (let i = 0; i < totalCells; i++) {
         const cell = document.createElement('div');
         cell.classList.add('grid-cell');
 
         cell.addEventListener('mouseenter', () => {
           if (isActive) {
-            cell.style.backgroundColor = 'yellow';
             hoverCount++;
-            counterDisplay.textContent = `Hover Count: ${hoverCount}`;
-          }
-        });
-
-        cell.addEventListener('mouseleave', () => {
-          if (isActive) {
-            cell.style.backgroundColor = 'white';
+            if (cell.style.backgroundColor === 'yellow') {
+              cell.style.backgroundColor = 'white';
+              yellowCount--;
+            } else {
+              cell.style.backgroundColor = 'yellow';
+              yellowCount++;
+            }
+            updateCounts();
           }
         });
 
@@ -200,9 +205,10 @@
       stopButton.disabled = false;
 
       hoverCount = 0;
-      counterDisplay.textContent = `Hover Count: ${hoverCount}`;
+      yellowCount = 0;
+      updateCounts();
 
-      walnutImagePosition = Math.floor(Math.random() * gridSize * gridSize);
+      walnutImagePosition = Math.floor(Math.random() * totalCells);
       const walnutCell = gridContainer.children[walnutImagePosition];
       const img = document.createElement('img');
       img.src = 'Mask-group-5.webp';
@@ -210,19 +216,28 @@
 
       walnutCell.addEventListener('mouseenter', () => {
         if (isActive) {
+          img.style.display = 'block';
           showPopup();
         }
       });
     }
 
-    function stopGame() {
+    function showPopup() {
       isActive = false;
       startButton.disabled = false;
       stopButton.disabled = true;
-    }
 
-    function showPopup() {
-      isActive = false;
+      const hoverPercentage = (hoverCount / totalCells) * 100;
+      let message = 'Congratulations, Walnut Found!';
+      if (hoverPercentage <= 50) {
+        message += ' Excellent, you found the walnut real quick!';
+      } else if (hoverPercentage <= 75) {
+        message += ' Good game, you found the walnut in time!';
+      } else if (hoverPercentage >= 90) {
+        message += ' Better luck next time, you found the walnut a little late.';
+      }
+
+      document.getElementById('popup-content').textContent = message;
       popup.style.display = 'block';
       generateConfetti();
     }
@@ -245,7 +260,7 @@
     });
 
     startButton.addEventListener('click', startGame);
-    stopButton.addEventListener('click', stopGame);
+    stopButton.addEventListener('click', () => (isActive = false));
     document.addEventListener('DOMContentLoaded', () => createGrid(5));
   </script>
 </body>
