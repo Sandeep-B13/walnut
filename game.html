@@ -18,7 +18,6 @@
 
     .logo {
       margin: 20px;
-      position: relative;
     }
 
     .logo img {
@@ -32,7 +31,7 @@
 
     #grid-container {
       display: grid;
-      gap: 1px; /* Add a border gap between grid cells */
+      gap: 1px;
       border: 5px solid #ffffff;
       background-color: #ffffff;
     }
@@ -43,7 +42,6 @@
       background-color: white;
       border: 1px solid #a270e0;
       transition: background-color 0.2s ease-in-out;
-      position: relative;
     }
 
     .grid-cell img {
@@ -63,10 +61,10 @@
     }
 
     .popup {
-      position: absolute;
-      top: 50%;
+      position: fixed;
+      bottom: 20px;
       left: 50%;
-      transform: translate(-50%, -50%);
+      transform: translateX(-50%);
       background: white;
       color: #a270e0;
       border-radius: 10px;
@@ -155,6 +153,7 @@
     const gridSizeSelect = document.getElementById('grid-size');
     const counterDisplay = document.getElementById('counter');
     const popup = document.getElementById('popup');
+    const popupContent = document.getElementById('popup-content');
     const playAgainButton = document.getElementById('play-again-button');
     const confettiContainer = document.getElementById('confetti-container');
 
@@ -237,7 +236,7 @@
         message += ' Better luck next time, you found the walnut a little late.';
       }
 
-      document.getElementById('popup-content').textContent = message;
+      popupContent.textContent = message;
       popup.style.display = 'block';
       generateConfetti();
     }
