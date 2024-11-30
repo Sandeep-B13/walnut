@@ -41,7 +41,23 @@
       height: 50px;
       background-color: white;
       border: 1px solid #000;
+      transition: background-color 0.2s ease-in-out;
       position: relative;
+    }
+
+    .grid-cell img {
+      width: 50%;
+      height: 50%;
+      object-fit: contain;
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .grid-cell img.visible {
+      display: block;
     }
 
     #counter {
@@ -49,53 +65,104 @@
       font-weight: bold;
     }
 
-    .popup {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #f9f9f9;
-      color: #000;
-      border-radius: 10px;
-      text-align: center;
-      padding: 20px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-      display: none;
-      z-index: 9999;
-    }
+.popup {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #f9f9f9;
+  color: #000;
+  border-radius: 10px;
+  text-align: center;
+  padding: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  display: none;
+  z-index: 9999;
+}
 
-    .popup button {
+#play-again-button {
+  margin-top: 5px;
+}
+
+ .popup button {
       background-color: #000;
       color: white;
-      padding: 10px 20px;
+      padding: 5px 10px;
       border: none;
-      border-radius: 5px;
+      border-radius: 1px;
       cursor: pointer;
     }
 
-    #top-logo {
+.moving-walnut {
+  display: block;
+  margin: 10px auto 0;
+  width: 30px;
+  animation: move-horizontal 2s infinite alternate ease-in-out;
+}
+
+@keyframes move-horizontal {
+  0% {
+    transform: translateX(-10px);
+  }
+  100% {
+    transform: translateX(10px);
+  }
+}
+
+#top-logo {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    width: 200px;
+    z-index: 9999;
+    animation: zoomEffect 3s ease-in-out infinite;
+    display: none;
+  }
+
+  @keyframes zoomEffect {
+    0% {
+      transform: translate(-50%, -50%) scale(0.8);
+      opacity: 1;
+    }
+    50% {
+      transform: translate(-50%, -50%) scale(1.2);
+      opacity: 0.8;
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(0.8);
+      opacity: 1;
+    }
+  }
+
+    .confetti-container {
       position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) scale(0);
-      width: 200px;
-      z-index: 9999;
-      animation: zoomEffect 3s ease-in-out infinite;
-      display: none;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: hidden;
     }
 
-    @keyframes zoomEffect {
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: white;
+      opacity: 0.8;
+      animation: fall 3s linear infinite;
+    }
+    
+
+    @keyframes fall {
       0% {
-        transform: translate(-50%, -50%) scale(0.8);
+        transform: translateY(-100%) rotate(0deg);
         opacity: 1;
-      }
-      50% {
-        transform: translate(-50%, -50%) scale(1.2);
-        opacity: 0.8;
       }
       100% {
-        transform: translate(-50%, -50%) scale(0.8);
-        opacity: 1;
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
       }
     }
   </style>
@@ -120,13 +187,15 @@
   <!-- Walnut logo with zoom effect -->
   <img id="top-logo" src="https://dka575ofm4ao0.cloudfront.net/pages-transactional_logos/retina/228472/walnut-logo-black.png" alt="Walnut Zoom Logo">
 
-  <div class="popup" id="popup">
-    <div id="popup-content" style="font-weight: bold;"></div>
-    <button id="play-again-button">Play Again</button>
-  </div>
+<div class="popup" id="popup">
+  <div id="popup-content" style="font-weight: bold;"></div>
+  <button id="play-again-button">Play Again</button>
+  <img src="Mask-group-5.webp" alt="Walnut" class="moving-walnut">
+</div>
+
+  <div class="confetti-container" id="confetti-container"></div>
 
   <script>
-    // Cached DOM elements
     const gridContainer = document.getElementById('grid-container');
     const startButton = document.getElementById('start-button');
     const stopButton = document.getElementById('stop-button');
@@ -135,6 +204,7 @@
     const popup = document.getElementById('popup');
     const popupContent = document.getElementById('popup-content');
     const playAgainButton = document.getElementById('play-again-button');
+    const confettiContainer = document.getElementById('confetti-container');
     const topLogo = document.getElementById('top-logo');
 
     let isActive = false;
@@ -143,13 +213,20 @@
     let totalCells = 0;
     let walnutImagePosition = null;
 
-    // Update counter
+    // Set default highlight color (can be changed here using hex code)
+    let highlightColor = '#FFFF00'; // << Update this value to change the default color
+
+    // Parse URL parameter
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('color')) {
+      highlightColor = params.get('color'); // Override the default highlight color
+    }
+
     function updateCounts() {
       const whiteCount = totalCells - yellowCount;
       counterDisplay.textContent = `Hover Count: ${hoverCount} | Highlighted Cells: ${yellowCount} | White Cells: ${whiteCount}`;
     }
 
-    // Create the grid
     function createGrid(size) {
       gridContainer.innerHTML = '';
       gridContainer.style.gridTemplateRows = `repeat(${size}, 1fr)`;
@@ -163,11 +240,11 @@
         cell.addEventListener('mouseenter', () => {
           if (isActive) {
             hoverCount++;
-            if (cell.style.backgroundColor === 'yellow') {
+            if (cell.style.backgroundColor === highlightColor) {
               cell.style.backgroundColor = 'white';
               yellowCount--;
             } else {
-              cell.style.backgroundColor = 'yellow';
+              cell.style.backgroundColor = highlightColor;
               yellowCount++;
             }
             updateCounts();
@@ -178,7 +255,6 @@
       }
     }
 
-    // Start the game
     function startGame() {
       const gridSize = parseInt(gridSizeSelect.value);
       createGrid(gridSize);
@@ -190,22 +266,20 @@
       yellowCount = 0;
       updateCounts();
 
-      // Place walnut
       walnutImagePosition = Math.floor(Math.random() * totalCells);
       const walnutCell = gridContainer.children[walnutImagePosition];
       const img = document.createElement('img');
       img.src = 'Mask-group-5.webp';
-      img.classList.add('visible');
       walnutCell.appendChild(img);
 
       walnutCell.addEventListener('mouseenter', () => {
         if (isActive) {
+          img.classList.add('visible');
           showPopup();
         }
       });
     }
 
-    // Show the popup and walnut logo animation
     function showPopup() {
       isActive = false;
       startButton.disabled = false;
@@ -223,18 +297,30 @@
 
       popupContent.textContent = message;
       popup.style.display = 'block';
-
-      // Show walnut logo with zoom animation
       topLogo.style.display = 'block';
+      generateConfetti();
     }
 
-    // Play again functionality
+    function generateConfetti() {
+      confettiContainer.innerHTML = '';
+      for (let i = 0; i < 100; i++) {
+        const confetti = document.createElement('div');
+        confetti.classList.add('confetti');
+        confetti.style.left = `${Math.random() * 100}vw`;
+        confetti.style.animationDelay = `${Math.random()}s`;
+        confetti.style.animationDuration = `${1 + Math.random() * 2}s`;
+        confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+        confettiContainer.appendChild(confetti);
+      }
+    }
+
     playAgainButton.addEventListener('click', () => {
       location.reload();
     });
 
     startButton.addEventListener('click', startGame);
     stopButton.addEventListener('click', () => (isActive = false));
+    document.addEventListener('DOMContentLoaded', () => createGrid(5));
   </script>
 </body>
 </html>
