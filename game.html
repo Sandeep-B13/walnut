@@ -252,32 +252,28 @@
       const walnutImg = cell.querySelector('img');
       walnutImg.style.display = 'block'; // Ensure walnut image is visible
 
-      generateConfetti(cell); // Start confetti blast from walnut position
+      generateConfetti(); // Start confetti blast
       popup.style.display = 'block';
     }
 
-    function generateConfetti(cell) {
+    function generateConfetti() {
       confettiContainer.innerHTML = '';
-      const { left, top } = cell.getBoundingClientRect();
       for (let i = 0; i < 100; i++) {
         const confetti = document.createElement('div');
         confetti.classList.add('confetti');
-        confetti.style.left = `${left + Math.random() * 50}px`;
-        confetti.style.top = `${top + Math.random() * 50}px`;
+        confetti.style.left = `${Math.random() * 100}vw`;
         confetti.style.animationDelay = `${Math.random()}s`;
         confetti.style.animationDuration = `${1 + Math.random() * 2}s`;
         confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
         confettiContainer.appendChild(confetti);
       }
-
-      setTimeout(() => {
-        confettiContainer.innerHTML = ''; // Stop confetti after a while
-      }, 3000);
     }
 
     playAgainButton.addEventListener('click', () => {
       popup.style.display = 'none';
-      startGame();
+      confettiContainer.innerHTML = ''; // Stop confetti
+      stopButton.disabled = true;
+      startButton.disabled = false;
     });
 
     startButton.addEventListener('click', startGame);
