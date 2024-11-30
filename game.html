@@ -18,10 +18,13 @@
 
     .logo {
       margin: 20px;
+      display: none; /* Hide until walnut is found */
     }
 
     .logo img {
-      width: 150px;
+      width: 50px;
+      height: 50px;
+      object-fit: contain;
     }
 
     .controls {
@@ -34,6 +37,7 @@
       gap: 1px;
       border: 5px solid #000;
       background-color: #000;
+      position: relative;
     }
 
     .grid-cell {
@@ -43,6 +47,9 @@
       border: 1px solid #000;
       transition: background-color 0.2s ease-in-out;
       position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .grid-cell img {
@@ -80,6 +87,11 @@
       z-index: 9999;
     }
 
+    .popup img {
+      width: 40px;
+      animation: jump 1s infinite;
+    }
+
     .popup button {
       background-color: #000;
       color: white;
@@ -89,8 +101,33 @@
       cursor: pointer;
     }
 
-    .confetti-container {
-      position: fixed;
+    @keyframes jump {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    @keyframes colorSwitch {
+      0% {
+        background-color: white;
+      }
+      50% {
+        background-color: #a270e0;
+      }
+      100% {
+        background-color: white;
+      }
+    }
+
+    .color-switch {
+      animation: colorSwitch 1s infinite;
+    }
+
+    .glitter {
+      position: absolute;
       top: 0;
       left: 0;
       width: 100%;
@@ -99,22 +136,27 @@
       overflow: hidden;
     }
 
-    .confetti {
+    .glitter .star {
       position: absolute;
-      width: 10px;
-      height: 10px;
+      width: 5px;
+      height: 5px;
       background-color: white;
-      opacity: 0.8;
-      animation: fall 3s linear infinite;
+      border-radius: 50%;
+      opacity: 0;
+      animation: sparkle 2s infinite;
     }
 
-    @keyframes fall {
+    @keyframes sparkle {
       0% {
-        transform: translateY(-100%) rotate(0deg);
+        transform: scale(0);
         opacity: 1;
       }
+      50% {
+        transform: scale(1.5);
+        opacity: 0.5;
+      }
       100% {
-        transform: translateY(100vh) rotate(360deg);
+        transform: scale(0);
         opacity: 0;
       }
     }
@@ -138,42 +180,28 @@
   <div id="grid-container"></div>
 
   <div class="popup" id="popup">
+    <img src="Mask-group-5.webp" alt="Walnut">
     <div id="popup-content" style="font-weight: bold;"></div>
+    <img src="Mask-group-5.webp" alt="Walnut">
     <button id="play-again-button">Play Again</button>
   </div>
 
-  <div class="confetti-container" id="confetti-container"></div>
+  <div class="glitter" id="glitter"></div>
 
   <script>
     const gridContainer = document.getElementById('grid-container');
     const startButton = document.getElementById('start-button');
     const stopButton = document.getElementById('stop-button');
-    const gridSizeSelect = document.getElementById('grid-size');
-    const counterDisplay = document.getElementById('counter');
     const popup = document.getElementById('popup');
     const popupContent = document.getElementById('popup-content');
     const playAgainButton = document.getElementById('play-again-button');
-    const confettiContainer = document.getElementById('confetti-container');
+    const glitter = document.getElementById('glitter');
 
     let isActive = false;
     let hoverCount = 0;
     let yellowCount = 0;
     let totalCells = 0;
     let walnutImagePosition = null;
-
-    // Set default highlight color (can be changed here using hex code)
-    let highlightColor = '#FFFF00'; // << Update this value to change the default color
-
-    // Parse URL parameter
-    const params = new URLSearchParams(window.location.search);
-    if (params.has('color')) {
-      highlightColor = params.get('color'); // Override the default highlight color
-    }
-
-    function updateCounts() {
-      const whiteCount = totalCells - yellowCount;
-      counterDisplay.textContent = `Hover Count: ${hoverCount} | Highlighted Cells: ${yellowCount} | White Cells: ${whiteCount}`;
-    }
 
     function createGrid(size) {
       gridContainer.innerHTML = '';
@@ -185,34 +213,16 @@
         const cell = document.createElement('div');
         cell.classList.add('grid-cell');
 
-        cell.addEventListener('mouseenter', () => {
-          if (isActive) {
-            hoverCount++;
-            if (cell.style.backgroundColor === highlightColor) {
-              cell.style.backgroundColor = 'white';
-              yellowCount--;
-            } else {
-              cell.style.backgroundColor = highlightColor;
-              yellowCount++;
-            }
-            updateCounts();
-          }
-        });
-
         gridContainer.appendChild(cell);
       }
     }
 
     function startGame() {
-      const gridSize = parseInt(gridSizeSelect.value);
+      const gridSize = parseInt(document.getElementById('grid-size').value);
       createGrid(gridSize);
       isActive = true;
       startButton.disabled = true;
       stopButton.disabled = false;
-
-      hoverCount = 0;
-      yellowCount = 0;
-      updateCounts();
 
       walnutImagePosition = Math.floor(Math.random() * totalCells);
       const walnutCell = gridContainer.children[walnutImagePosition];
@@ -230,44 +240,32 @@
 
     function showPopup() {
       isActive = false;
-      startButton.disabled = false;
-      stopButton.disabled = true;
-
-      const hoverPercentage = (hoverCount / totalCells) * 100;
-      let message = '';
-      if (hoverPercentage <= 50) {
-        message = 'Excellent! You found the walnut quickly!';
-      } else if (hoverPercentage <= 75) {
-        message = 'Good job! You found the walnut in time!';
-      } else {
-        message = 'Better luck next time! You found the walnut late.';
-      }
-
-      popupContent.textContent = message;
       popup.style.display = 'block';
-      generateConfetti();
+
+      const cells = Array.from(gridContainer.children);
+      cells.forEach((cell, index) => {
+        if (index !== walnutImagePosition) {
+          cell.classList.add('color-switch');
+        }
+      });
+
+      generateGlitter();
     }
 
-    function generateConfetti() {
-      confettiContainer.innerHTML = '';
-      for (let i = 0; i < 100; i++) {
-        const confetti = document.createElement('div');
-        confetti.classList.add('confetti');
-        confetti.style.left = `${Math.random() * 100}vw`;
-        confetti.style.animationDelay = `${Math.random()}s`;
-        confetti.style.animationDuration = `${1 + Math.random() * 2}s`;
-        confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
-        confettiContainer.appendChild(confetti);
+    function generateGlitter() {
+      glitter.innerHTML = '';
+      for (let i = 0; i < 50; i++) {
+        const star = document.createElement('div');
+        star.classList.add('star');
+        star.style.left = `${Math.random() * 100}%`;
+        star.style.top = `${Math.random() * 100}%`;
+        star.style.animationDelay = `${Math.random() * 2}s`;
+        glitter.appendChild(star);
       }
     }
-
-    playAgainButton.addEventListener('click', () => {
-      location.reload();
-    });
 
     startButton.addEventListener('click', startGame);
-    stopButton.addEventListener('click', () => (isActive = false));
-    document.addEventListener('DOMContentLoaded', () => createGrid(5));
+    playAgainButton.addEventListener('click', () => location.reload());
   </script>
 </body>
 </html>
