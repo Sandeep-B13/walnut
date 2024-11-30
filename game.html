@@ -172,13 +172,13 @@
 
     function updateCounts() {
       const whiteCount = totalCells - yellowCount;
-      counterDisplay.textContent = Hover Count: ${hoverCount} | Highlighted Cells: ${yellowCount} | White Cells: ${whiteCount};
+      counterDisplay.textContent = `Hover Count: ${hoverCount} | Highlighted Cells: ${yellowCount} | White Cells: ${whiteCount}`;
     }
 
     function createGrid(size) {
       gridContainer.innerHTML = '';
-      gridContainer.style.gridTemplateRows = repeat(${size}, 1fr);
-      gridContainer.style.gridTemplateColumns = repeat(${size}, 1fr);
+      gridContainer.style.gridTemplateRows = `repeat(${size}, 1fr)`;
+      gridContainer.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
       totalCells = size * size;
 
       for (let i = 0; i < totalCells; i++) {
@@ -253,10 +253,10 @@
       for (let i = 0; i < 100; i++) {
         const confetti = document.createElement('div');
         confetti.classList.add('confetti');
-        confetti.style.left = ${Math.random() * 100}vw;
-        confetti.style.animationDelay = ${Math.random()}s;
-        confetti.style.animationDuration = ${1 + Math.random() * 2}s;
-        confetti.style.backgroundColor = hsl(${Math.random() * 360}, 100%, 50%);
+        confetti.style.left = `${Math.random() * 100}vw`;
+        confetti.style.animationDelay = `${Math.random()}s`;
+        confetti.style.animationDuration = `${1 + Math.random() * 2}s`;
+        confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
         confettiContainer.appendChild(confetti);
       }
     }
