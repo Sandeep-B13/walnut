@@ -34,7 +34,6 @@
       gap: 1px;
       border: 5px solid #000;
       background-color: #000;
-      position: relative;
     }
 
     .grid-cell {
@@ -46,7 +45,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background-color 0.5s ease;
     }
 
     .grid-cell img {
@@ -59,6 +57,36 @@
 
     .grid-cell img.visible {
       display: block;
+    }
+
+    .glitter {
+      position: absolute;
+      width: 5px;
+      height: 5px;
+      background-color: #fff;
+      border-radius: 50%;
+      animation: shimmer 2s infinite ease-in-out;
+      pointer-events: none;
+    }
+
+    @keyframes shimmer {
+      0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+      50% {
+        opacity: 0.5;
+        transform: translateY(-10px) scale(1.2);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    #counter {
+      margin-top: 10px;
+      font-weight: bold;
     }
 
     .popup {
@@ -77,17 +105,9 @@
     }
 
     .popup img {
-      width: 40px;
+      width: 50px;
+      margin: 0 10px;
       animation: jump 1s infinite;
-    }
-
-    .popup button {
-      background-color: #000;
-      color: white;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
     }
 
     @keyframes jump {
@@ -99,7 +119,16 @@
       }
     }
 
-    @keyframes colorSwitch {
+    .popup button {
+      background-color: #000;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    @keyframes color-switch {
       0% {
         background-color: white;
       }
@@ -111,43 +140,8 @@
       }
     }
 
-    .color-switch {
-      animation: colorSwitch 1s infinite;
-    }
-
-    .glitter {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      overflow: hidden;
-    }
-
-    .glitter .star {
-      position: absolute;
-      width: 5px;
-      height: 5px;
-      background-color: white;
-      border-radius: 50%;
-      opacity: 0;
-      animation: sparkle 2s infinite;
-    }
-
-    @keyframes sparkle {
-      0% {
-        transform: scale(0);
-        opacity: 1;
-      }
-      50% {
-        transform: scale(1.5);
-        opacity: 0.5;
-      }
-      100% {
-        transform: scale(0);
-        opacity: 0;
-      }
+    .switch-color {
+      animation: color-switch 1s infinite;
     }
   </style>
 </head>
@@ -175,19 +169,14 @@
     <button id="play-again-button">Play Again</button>
   </div>
 
-  <div class="glitter" id="glitter"></div>
-
   <script>
     const gridContainer = document.getElementById('grid-container');
     const startButton = document.getElementById('start-button');
-    const stopButton = document.getElementById('stop-button');
+    const playAgainButton = document.getElementById('play-again-button');
     const popup = document.getElementById('popup');
     const popupContent = document.getElementById('popup-content');
-    const playAgainButton = document.getElementById('play-again-button');
-    const glitter = document.getElementById('glitter');
 
     let isActive = false;
-    let hoverCount = 0;
     let walnutImagePosition = null;
 
     function createGrid(size) {
@@ -204,19 +193,19 @@
     }
 
     function startGame() {
+      isActive = true;
       const gridSize = parseInt(document.getElementById('grid-size').value);
       createGrid(gridSize);
-      isActive = true;
 
       walnutImagePosition = Math.floor(Math.random() * gridSize * gridSize);
       const walnutCell = gridContainer.children[walnutImagePosition];
       const img = document.createElement('img');
       img.src = 'Mask-group-5.webp';
+      img.classList.add('visible');
       walnutCell.appendChild(img);
 
       walnutCell.addEventListener('mouseenter', () => {
         if (isActive) {
-          img.classList.add('visible');
           showPopup();
         }
       });
@@ -225,32 +214,18 @@
     function showPopup() {
       isActive = false;
       popup.style.display = 'block';
-
-      const cells = Array.from(gridContainer.children);
-      cells.forEach((cell, index) => {
-        if (index !== walnutImagePosition) {
-          cell.classList.add('color-switch');
-        }
-        const logo = document.createElement('img');
-        logo.src = 'https://dka575ofm4ao0.cloudfront.net/pages-transactional_logos/retina/228472/walnut-logo-black.png';
-        logo.style.width = '30px';
-        logo.style.height = '30px';
-        cell.appendChild(logo);
-      });
-
-      generateGlitter();
+      applyEffects();
     }
 
-    function generateGlitter() {
-      glitter.innerHTML = '';
-      for (let i = 0; i < 50; i++) {
-        const star = document.createElement('div');
-        star.classList.add('star');
-        star.style.left = `${Math.random() * 100}%`;
-        star.style.top = `${Math.random() * 100}%`;
-        star.style.animationDelay = `${Math.random() * 2}s`;
-        glitter.appendChild(star);
-      }
+    function applyEffects() {
+      Array.from(gridContainer.children).forEach((cell, index) => {
+        if (index !== walnutImagePosition) {
+          cell.classList.add('switch-color');
+          cell.style.backgroundImage = 'url(https://dka575ofm4ao0.cloudfront.net/pages-transactional_logos/retina/228472/walnut-logo-black.png)';
+          cell.style.backgroundRepeat = 'no-repeat';
+          cell.style.backgroundPosition = 'center';
+        }
+      });
     }
 
     startButton.addEventListener('click', startGame);
