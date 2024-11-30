@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Grid</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #a270e0;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+
+    .logo {
+      margin-top: 20px;
+    }
+
+    .logo img {
+      width: 150px;
+    }
+
+    .controls {
+      margin: 20px;
+      text-align: center;
+    }
+
+    #grid-container {
+      display: grid;
+      margin: 0 auto;
+      gap: 0; /* No gap between grids */
+      border: 5px solid #ffffff;
+    }
+
+    .grid-cell {
+      width: 50px;
+      height: 50px;
+      background-color: white;
+    }
+
+    .grid-cell.yellow {
+      background-color: yellow;
+    }
+
+    .grid-cell img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: none;
+    }
+
+    .grid-cell img.visible {
+      display: block;
+    }
+
+    #counter {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    /* Center popup styling */
+    .popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      color: #a270e0;
+      border-radius: 10px;
+      text-align: center;
+      padding: 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      display: none;
+      z-index: 9999;
+    }
+
+    /* Confetti container */
+    .confetti-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: white;
+      animation: fall 3s linear infinite;
+    }
+
+    @keyframes fall {
+      0% {
+        transform: translateY(-100%) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Logo -->
+  <div class="logo">
+    <img src="https://dka575ofm4ao0.cloudfront.net/pages-transactional_logos/retina/228472/walnut-logo-black.png" alt="Walnut Logo">
+  </div>
+
+  <div class="controls">
+    <select id="grid-size">
+      <option value="5">5x5</option>
+      <option value="6">6x6</option>
+      <option value="7">7x7</option>
+    </select>
+    <button id="start-button">START</button>
+    <button id="stop-button" disabled>STOP</button>
+    <div id="counter">Hover Count: 0</div>
+  </div>
+  <div id="grid-container" onmouseleave="resetHoverColor()"></div>
+
+  <!-- Popup -->
+  <div class="popup" id="popup">Congratulations, Walnut Found!</div>
+
+  <!-- Confetti -->
+  <div class="confetti-container" id="confetti-container"></div>
+
+  <script>
+    const gridContainer = document.getElementById('grid-container');
+    const startButton = document.getElementById('start-button');
+    const stopButton = document.getElementById('stop-button');
+    const gridSizeSelect = document.getElementById('grid-size');
+    const counterDisplay = document.getElementById('counter');
+    const popup = document.getElementById('popup');
+    const confettiContainer = document.getElementById('confetti-container');
+
+    let isActive = false;
+    let hoverCount = 0;
+    let walnutImagePosition = null;
+
+    function createGrid(size) {
+      gridContainer.innerHTML = ''; // Clear existing grid
+      gridContainer.style.gridTemplateRows = `repeat(${size}, 1fr)`;
+      gridContainer.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+
+      for (let i = 0; i < size * size; i++) {
+        const cell = document.createElement('div');
+        cell.classList.add('grid-cell');
+        cell.addEventListener('mouseover', handleHover);
+        gridContainer.appendChild(cell);
+      }
+    }
+
+    function handleHover(e) {
+      if (!isActive) return;
+
+      const cell = e.target;
+
+      if (cell.classList.contains('yellow')) {
+        cell.classList.remove('yellow');
+        cell.style.backgroundColor = 'white';
+      } else {
+        cell.classList.add('yellow');
+        cell.style.backgroundColor = 'yellow';
+        hoverCount++;
+        counterDisplay.textContent = `Hover Count: ${hoverCount}`;
+
+        // Check if walnut image is found
+        if (gridContainer.children[walnutImagePosition] === cell) {
+          showPopup();
+        }
+      }
+    }
+
+    function resetHoverColor() {
+      gridContainer.style.backgroundColor = "#a270e0"; // Reset background color on mouse leave
+    }
+
+    function startGame() {
+      const gridSize = parseInt(gridSizeSelect.value);
+      createGrid(gridSize);
+      isActive = true;
+      startButton.disabled = true;
+      stopButton.disabled = false;
+
+      // Randomly position Walnut image
+      walnutImagePosition = Math.floor(Math.random() * gridSize * gridSize);
+      const walnutCell = gridContainer.children[walnutImagePosition];
+      const img = document.createElement('img');
+      img.src = './walnut-image.jpg'; // Add your downloaded image path
+      img.classList.add('visible');
+      walnutCell.appendChild(img);
+    }
+
+    function stopGame() {
+      isActive = false;
+      startButton.disabled = false;
+      stopButton.disabled = true;
+    }
+
+    function showPopup() {
+      popup.style.display = 'block';
+      generateConfetti();
+      setTimeout(() => popup.style.display = 'none', 3000); // Hide popup after 3 seconds
+    }
+
+    function generateConfetti() {
+      confettiContainer.innerHTML = '';
+      for (let i = 0; i < 100; i++) {
+        const confetti = document.createElement('div');
+        confetti.classList.add('confetti');
+        confetti.style.left = `${Math.random() * 100}vw`;
+        confetti.style.animationDelay = `${Math.random()}s`;
+        confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+        confettiContainer.appendChild(confetti);
+      }
+    }
+
+    startButton.addEventListener('click', startGame);
+    stopButton.addEventListener('click', stopGame);
+    gridSizeSelect.addEventListener('change', () => createGrid(parseInt(gridSizeSelect.value)));
+
+    // Initialize default grid
+    createGrid(5);
+  </script>
+</body>
+</html>
