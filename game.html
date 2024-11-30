@@ -7,7 +7,7 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #a270e0;
+      background-color: white;
       margin: 0;
       display: flex;
       flex-direction: column;
@@ -32,15 +32,15 @@
     #grid-container {
       display: grid;
       gap: 1px;
-      border: 5px solid #ffffff;
-      background-color: #ffffff;
+      border: 5px solid #000;
+      background-color: #000;
     }
 
     .grid-cell {
       width: 50px;
       height: 50px;
       background-color: white;
-      border: 1px solid #a270e0;
+      border: 1px solid #000;
       transition: background-color 0.2s ease-in-out;
     }
 
@@ -65,8 +65,8 @@
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background: white;
-      color: #a270e0;
+      background: #f9f9f9;
+      color: #000;
       border-radius: 10px;
       text-align: center;
       padding: 20px;
@@ -82,7 +82,7 @@
     }
 
     .popup button {
-      background-color: #a270e0;
+      background-color: #000;
       color: white;
       padding: 10px 20px;
       border: none;
@@ -134,12 +134,12 @@
     </select>
     <button id="start-button">START</button>
     <button id="stop-button" disabled>STOP</button>
-    <div id="counter">Hover Count: 0 | Yellow Cells: 0 | White Cells: 0</div>
+    <div id="counter">Hover Count: 0 | Highlighted Cells: 0 | White Cells: 0</div>
   </div>
   <div id="grid-container"></div>
 
   <div class="popup" id="popup">
-    <div id="popup-content"></div>
+    <div id="popup-content" style="font-weight: bold;"></div>
     <img src="Mask-group-5.webp" alt="Walnut Image">
     <button id="play-again-button">Play Again</button>
   </div>
@@ -163,9 +163,18 @@
     let totalCells = 0;
     let walnutImagePosition = null;
 
+    // Set default highlight color (can be changed here)
+    let highlightColor = 'yellow'; // << Update this value to change the default color
+
+    // Parse URL parameter
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('color')) {
+      highlightColor = params.get('color'); // Override the default highlight color
+    }
+
     function updateCounts() {
       const whiteCount = totalCells - yellowCount;
-      counterDisplay.textContent = `Hover Count: ${hoverCount} | Yellow Cells: ${yellowCount} | White Cells: ${whiteCount}`;
+      counterDisplay.textContent = `Hover Count: ${hoverCount} | Highlighted Cells: ${yellowCount} | White Cells: ${whiteCount}`;
     }
 
     function createGrid(size) {
@@ -181,11 +190,11 @@
         cell.addEventListener('mouseenter', () => {
           if (isActive) {
             hoverCount++;
-            if (cell.style.backgroundColor === 'yellow') {
+            if (cell.style.backgroundColor === highlightColor) {
               cell.style.backgroundColor = 'white';
               yellowCount--;
             } else {
-              cell.style.backgroundColor = 'yellow';
+              cell.style.backgroundColor = highlightColor;
               yellowCount++;
             }
             updateCounts();
@@ -227,13 +236,13 @@
       stopButton.disabled = true;
 
       const hoverPercentage = (hoverCount / totalCells) * 100;
-      let message = 'Congratulations, Walnut Found!';
+      let message = '';
       if (hoverPercentage <= 50) {
-        message += ' Excellent, you found the walnut real quick!';
+        message = 'Excellent! You found the walnut quickly!';
       } else if (hoverPercentage <= 75) {
-        message += ' Good game, you found the walnut in time!';
-      } else if (hoverPercentage >= 90) {
-        message += ' Better luck next time, you found the walnut a little late.';
+        message = 'Good job! You found the walnut in time!';
+      } else {
+        message = 'Better luck next time! You found the walnut late.';
       }
 
       popupContent.textContent = message;
